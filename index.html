@@ -124,19 +124,21 @@
                     };
 
                     const actions = document.createElement('div');
-                    actions.className = 'flex gap-5 opacity-0 group-hover:opacity-100 transition';
+                    actions.className = 'flex gap-6 opacity-0 group-hover:opacity-100 transition';
 
+                    // Rename button – image only, no background, no text
                     const renameBtn = document.createElement('button');
-                    renameBtn.innerHTML = `<img src="images/rename.jpg" alt="Rename" class="w-6 h-6">`;
-                    renameBtn.className = 'bg-transparent border-none p-0 hover:opacity-80 transition';
+                    renameBtn.innerHTML = `<img src="images/rename.jpg" alt="Rename" class="w-7 h-7 bg-transparent">`;
+                    renameBtn.className = 'bg-transparent border-none p-0 hover:opacity-80 focus:outline-none transition';
                     renameBtn.onclick = (e) => {
                         e.stopPropagation();
                         renameChat(chat.id);
                     };
 
+                    // Delete button – image only, no background, no text
                     const deleteBtn = document.createElement('button');
-                    deleteBtn.innerHTML = `<img src="images/delete.jpg" alt="Delete" class="w-6 h-6">`;
-                    deleteBtn.className = 'bg-transparent border-none p-0 hover:opacity-80 transition';
+                    deleteBtn.innerHTML = `<img src="images/delete.jpg" alt="Delete" class="w-7 h-7 bg-transparent">`;
+                    deleteBtn.className = 'bg-transparent border-none p-0 hover:opacity-80 focus:outline-none transition';
                     deleteBtn.onclick = (e) => {
                         e.stopPropagation();
                         deleteChat(chat.id);
