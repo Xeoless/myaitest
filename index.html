@@ -238,8 +238,8 @@
                             'X-Title': 'ElXora Chat'
                         },
                         body: JSON.stringify({
-                            model: 'google/gemini-2.0-flash-exp',
-                            messages: [{ role: 'system', content: 'You are ElXora, a helpful, witty, and friendly AI companion created for Kevin.' }, ...chat.messages],
+                            model: 'google/gemma-3-27b-it:free',
+                            messages: [{ role: 'system', content: 'You are ElXora.' }, ...chat.messages],
                             stream: true
                         })
                     });
