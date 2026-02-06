@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ElXora</title>
+    <title>ElXora – Black & White Chat</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
@@ -49,7 +49,7 @@
 
             <div class="p-6 border-t border-gray-800 bg-gray-950 sticky bottom-0">
                 <div class="max-w-4xl mx-auto flex gap-4">
-                    <textarea id="input" class="flex-1 p-5 bg-gray-900 border border-gray-800 rounded-2xl resize-none focus:outline-none focus:border-gray-500 transition min-h-[60px]" rows="1" placeholder="Talk to ElXora..."></textarea>
+                    <textarea id="input" class="flex-1 p-5 bg-gray-900 border border-gray-800 rounded-2xl resize-none focus:outline-none focus:border-gray-500 transition min-h-[60px]" rows="1" placeholder="Hey ElXora, what's up?"></textarea>
                     <button id="send" class="px-8 py-5 bg-white text-black font-semibold rounded-2xl hover:scale-105 hover:shadow-[0_0_30px_rgba(255,255,255,0.2)] transition">Send</button>
                 </div>
             </div>
@@ -64,7 +64,7 @@
         });
 
         function initElXora() {
-            const API_KEY = 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'; // ← Replace with your actual OpenRouter API key
+            const API_KEY = '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';
 
             const STORAGE = {
                 chats: 'elxora:chats',
@@ -142,7 +142,7 @@
 
                     actions.append(renameBtn, deleteBtn);
                     li.append(titleSpan, actions);
-                    li.onclick = () => selectChat(chat.id); // whole row selects except buttons
+                    li.onclick = () => selectChat(chat.id);
 
                     chatList.appendChild(li);
                 });
@@ -221,7 +221,7 @@
                 aiDiv.className = 'message flex justify-start visible';
                 const aiBubble = document.createElement('div');
                 aiBubble.className = 'max-w-3xl p-6 rounded-3xl bg-gray-900 border border-gray-800';
-                aiBubble.innerHTML = '<div class="typing-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>';
+                aiBubble.innerHTML = '<div class="typing-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div> Thinking...';
                 aiDiv.appendChild(aiBubble);
                 messages.appendChild(aiDiv);
                 messages.scrollTop = messages.scrollHeight;
@@ -233,16 +233,21 @@
                         method: 'POST',
                         headers: {
                             'Authorization': `Bearer ${API_KEY}`,
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
+                            'HTTP-Referer': window.location.origin || 'https://elxora-chat.pages.dev', // optional – helps with leaderboard
+                            'X-Title': 'ElXora Chat'
                         },
                         body: JSON.stringify({
                             model: 'google/gemini-2.0-flash-exp',
-                            messages: [{ role: 'system', content: 'You are ElXora, a helpful and witty AI companion.' }, ...chat.messages],
+                            messages: [{ role: 'system', content: 'You are ElXora, a helpful, witty, and friendly AI companion created for Kevin.' }, ...chat.messages],
                             stream: true
                         })
                     });
 
-                    if (!res.ok) throw new Error(`API returned ${res.status}`);
+                    if (!res.ok) {
+                        const errText = await res.text().catch(() => '');
+                        throw new Error(`API error ${res.status}: ${errText || res.statusText}`);
+                    }
 
                     const reader = res.body.getReader();
                     const decoder = new TextDecoder();
@@ -273,11 +278,12 @@
                     chat.messages.push({ role: 'assistant', content: fullResponse });
                     saveChats();
                 } catch (err) {
-                    aiBubble.innerHTML = `<span class="text-red-400">Error: ${err.message || 'Connection failed'}</span>`;
+                    aiBubble.innerHTML = `<span class="text-red-400 font-medium">Error: ${err.message || 'Failed to connect to ElXora brain'}</span><br><small class="text-gray-500">(Check your API key or credits on openrouter.ai)</small>`;
+                    console.error(err);
                 }
             }
 
-            // Event listeners
+            // Events
             menuBtn.onclick = toggleSidebar;
             newBtn.onclick = createChat;
             sendBtn.onclick = sendMessage;
@@ -305,4 +311,4 @@
         }
     </script>
 </body>
-</html>
+    </html>
