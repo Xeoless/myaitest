@@ -228,6 +228,26 @@
 
                 let fullResponse = '';
 
+                // Prepare messages without separate system role (merged into first user message)
+                const apiMessages = [];
+                const systemContent = 'You are ElXora, a helpful, witty, and friendly AI companion created for Kevin.';
+
+                if (chat.messages.length > 0) {
+                    const firstMsg = chat.messages[0];
+                    if (firstMsg.role === 'user') {
+                        apiMessages.push({
+                            role: 'user',
+                            content: systemContent + "\n\n" + firstMsg.content
+                        });
+                    } else {
+                        apiMessages.push({ role: 'user', content: systemContent });
+                        apiMessages.push(firstMsg);
+                    }
+                    apiMessages.push(...chat.messages.slice(1));
+                } else {
+                    apiMessages.push({ role: 'user', content: systemContent + "\n\n" + text });
+                }
+
                 try {
                     const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
                         method: 'POST',
@@ -238,8 +258,8 @@
                             'X-Title': 'ElXora Chat'
                         },
                         body: JSON.stringify({
-                            model: 'google/gemma-3-27b-it:free',
-                            messages: [{ role: 'system', content: 'You are ElXora, a helpful, witty, and friendly AI companion created for Kevin.' }, ...chat.messages],
+                            model: 'z-ai/glm-4.5-air:free',
+                            messages: apiMessages,
                             stream: true
                         })
                     });
@@ -278,7 +298,7 @@
                     chat.messages.push({ role: 'assistant', content: fullResponse });
                     saveChats();
                 } catch (err) {
-                    aiBubble.innerHTML = `<span class="text-red-400 font-medium">Error: ${err.message || 'Failed to connect to ElXora brain'}</span><br><small class="text-gray-500">(Check your API key, credits, or model availability on openrouter.ai)</small>`;
+                    aiBubble.innerHTML = `<span class="text-red-400 font-medium">Error: ${err.message || 'Failed to connect to ElXora brain'}</span><br><small class="text-gray-500">(Check key/credits/model on openrouter.ai – GLM-4.5-Air free has daily limits)</small>`;
                     console.error(err);
                 }
             }
