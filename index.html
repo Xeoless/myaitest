@@ -77,34 +77,35 @@
         textarea:disabled { background: #1f2937; cursor: not-allowed; }
         button:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        /* Better login modal */
+        /* Improved login modal */
         #login-modal {
-            background: rgba(0,0,0,0.85);
-            backdrop-filter: blur(8px);
+            background: rgba(0,0,0,0.9);
+            backdrop-filter: blur(10px);
         }
         .login-card {
             background: #111827;
             padding: 3rem 2.5rem;
             border-radius: 1.5rem;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.7);
             width: 100%;
-            max-width: 460px;
+            max-width: 480px;
             text-align: center;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.12);
         }
         .g-signin2 {
-            transform: scale(1.4);
-            margin: 2.5rem auto 1rem;
+            transform: scale(1.5);
+            margin: 2.5rem auto;
             display: inline-block;
         }
         .login-title {
-            font-size: 2rem;
+            font-size: 2.25rem;
             font-weight: bold;
             margin-bottom: 1rem;
         }
         .login-subtitle {
             color: #9ca3af;
             margin-bottom: 2rem;
+            font-size: 1.1rem;
         }
     </style>
 </head>
@@ -157,8 +158,8 @@
     <div id="login-modal" class="fixed inset-0 bg-black/90 flex items-center justify-center z-50" style="display:none">
         <div class="login-card">
             <h2 class="login-title">Welcome to ElXora</h2>
-            <p class="login-subtitle">Sign in with Google to save your chats and personalize your experience</p>
-            <div class="g-signin2" data-onsuccess="onSignIn" data-theme="dark" data-width="320" data-height="50" data-longtitle="true"></div>
+            <p class="login-subtitle">Sign in with Google to save your chats and personalize</p>
+            <div id="google-login-btn" class="g-signin2 mt-6" data-onsuccess="onSignIn" data-theme="dark" data-width="320" data-height="50" data-longtitle="true"></div>
         </div>
     </div>
 
@@ -266,13 +267,13 @@
                     picture: profile.getImageUrl()
                 };
                 localStorage.setItem('elxora:user', JSON.stringify(userProfile));
-                showApp();
+                showApp(); // Hide modal and show app + user info
             }
 
             logoutBtn.onclick = () => {
                 localStorage.removeItem('elxora:user');
                 userProfile = null;
-                showApp();
+                showApp(); // Show login modal again
             };
 
             function loadChats() {
