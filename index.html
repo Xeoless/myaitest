@@ -76,6 +76,25 @@
         pre code.hljs { display: block; font-size: 0.95rem; line-height: 1.5; background: transparent !important; padding: 0; }
         textarea:disabled { background: #1f2937; cursor: not-allowed; }
         button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Better login modal */
+        #login-modal {
+            background: rgba(0,0,0,0.8);
+        }
+        .login-card {
+            background: #111827;
+            padding: 2.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+        }
+        .g-signin2 {
+            transform: scale(1.3);
+            margin: 2rem auto;
+            display: inline-block;
+        }
     </style>
 </head>
 <body class="bg-black text-white min-h-screen antialiased">
@@ -92,12 +111,15 @@
                 <button id="new-chat" class="w-full py-3 bg-white text-black font-medium rounded-xl hover:bg-gray-200 transition">New Conversation</button>
                 <button id="theme-toggle" class="w-full mt-4 py-3 border border-gray-700 rounded-xl hover:bg-gray-900 transition">Switch to Light</button>
             </div>
-            <div id="user-info" class="p-6 flex items-center gap-4 border-t border-gray-800">
-                <img id="user-icon" class="w-10 h-10 rounded-full" src="" alt="User Icon">
-                <div>
-                    <p id="user-name" class="font-bold"></p>
+            <div id="user-info" class="p-6 flex flex-col items-center gap-3 border-t border-gray-800">
+                <img id="user-icon" class="w-16 h-16 rounded-full border-2 border-gray-700" src="" alt="User Icon">
+                <div class="text-center">
+                    <p id="user-name" class="font-bold text-lg"></p>
                     <p id="user-email" class="text-sm opacity-70"></p>
                 </div>
+                <button id="logout-btn" class="mt-2 px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm transition hidden">
+                    Log Out
+                </button>
             </div>
         </div>
 
@@ -122,9 +144,10 @@
 
     <!-- Login Modal -->
     <div id="login-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50" style="display:none">
-        <div class="bg-gray-900 p-8 rounded-2xl w-full max-w-md text-center">
-            <h2 class="text-2xl mb-4">Login to ElXora</h2>
-            <div class="g-signin2" data-onsuccess="onSignIn" data-theme="dark"></div>
+        <div class="login-card">
+            <h2 class="text-3xl font-bold mb-6">Welcome to ElXora</h2>
+            <p class="text-gray-400 mb-8">Sign in with Google to save your chats</p>
+            <div class="g-signin2" data-onsuccess="onSignIn" data-theme="dark" data-width="300"></div>
         </div>
     </div>
 
@@ -203,15 +226,20 @@
             const userName = document.getElementById('user-name');
             const userEmail = document.getElementById('user-email');
             const loginModal = document.getElementById('login-modal');
+            const logoutBtn = document.getElementById('logout-btn');
 
             let userProfile = JSON.parse(localStorage.getItem('elxora:user')) || null;
 
             if (!userProfile) {
                 loginModal.style.display = 'flex';
+                userInfo.style.display = 'none';
             } else {
-                userIcon.src = userProfile.picture || 'https://via.placeholder.com/40';
+                loginModal.style.display = 'none';
+                userInfo.style.display = 'flex';
+                userIcon.src = userProfile.picture || 'https://via.placeholder.com/64';
                 userName.textContent = userProfile.name || 'Guest';
                 userEmail.textContent = userProfile.email || '';
+                logoutBtn.classList.remove('hidden');
                 loadChats();
             }
 
@@ -224,11 +252,25 @@
                 };
                 localStorage.setItem('elxora:user', JSON.stringify(userProfile));
                 loginModal.style.display = 'none';
+                userInfo.style.display = 'flex';
                 userIcon.src = userProfile.picture;
                 userName.textContent = userProfile.name;
                 userEmail.textContent = userProfile.email;
+                logoutBtn.classList.remove('hidden');
                 loadChats();
             }
+
+            logoutBtn.onclick = () => {
+                localStorage.removeItem('elxora:user');
+                userProfile = null;
+                userInfo.style.display = 'none';
+                loginModal.style.display = 'flex';
+                logoutBtn.classList.add('hidden');
+                chats = [];
+                currentId = null;
+                messages.innerHTML = '';
+                renderList();
+            };
 
             function loadChats() {
                 if (userProfile && userProfile.email) {
