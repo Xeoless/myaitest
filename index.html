@@ -199,6 +199,21 @@
             }
         });
 
+        // CRITICAL FIX: Global callback for Google Sign-In
+        // This MUST be in global scope for Google's library to access it
+        function onSignIn(googleUser) {
+            const profile = googleUser.getBasicProfile();
+            const userProfile = {
+                name: profile.getName(),
+                email: profile.getEmail(),
+                picture: profile.getImageUrl()
+            };
+            localStorage.setItem('elxora:user', JSON.stringify(userProfile));
+            
+            // Reload page to show logged-in state
+            window.location.reload();
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('loading').style.display = 'none';
             document.getElementById('app').style.display = 'flex';
@@ -259,21 +274,10 @@
                 }
             }
 
-            function onSignIn(googleUser) {
-                const profile = googleUser.getBasicProfile();
-                userProfile = {
-                    name: profile.getName(),
-                    email: profile.getEmail(),
-                    picture: profile.getImageUrl()
-                };
-                localStorage.setItem('elxora:user', JSON.stringify(userProfile));
-                showApp(); // Hide modal immediately after login
-            }
-
             logoutBtn.onclick = () => {
                 localStorage.removeItem('elxora:user');
                 userProfile = null;
-                showApp(); // Show login modal again
+                window.location.reload();
             };
 
             function loadChats() {
