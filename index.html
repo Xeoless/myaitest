@@ -8,6 +8,7 @@
 
     <!-- Google Sign-In -->
     <meta name="google-signin-client_id" content="968210645256-ql0ctmsn48dior31oresu53p21rugnna.apps.googleusercontent.com">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 
     <!-- Highlight.js -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/styles/github-dark-dimmed.min.css">
@@ -206,102 +207,38 @@
             }
         });
 
-        // GOOGLE OAUTH CONFIG
-        const GOOGLE_CLIENT_ID = '968210645256-ql0ctmsn48dior31oresu53p21rugnna.apps.googleusercontent.com';
-        const REDIRECT_URI = window.location.origin + window.location.pathname;
-        
-        // Handle OAuth popup window login
-        function initiateGoogleLogin() {
-            const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
-                `client_id=${GOOGLE_CLIENT_ID}&` +
-                `redirect_uri=${encodeURIComponent(REDIRECT_URI)}&` +
-                `response_type=token&` +
-                `scope=profile email&` +
-                `state=google_login`;
+        // GOOGLE SIGN-IN HANDLER
+        // This function will be called after Google script loads
+        function handleCredentialResponse(response) {
+            // Decode JWT token to get user info
+            const base64Url = response.credential.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
             
-            // Open popup window
-            const width = 500;
-            const height = 600;
-            const left = (window.screen.width - width) / 2;
-            const top = (window.screen.height - height) / 2;
+            const profile = JSON.parse(jsonPayload);
+            const userProfile = {
+                name: profile.name,
+                email: profile.email,
+                picture: profile.picture
+            };
             
-            const popup = window.open(
-                authUrl,
-                'Google Sign-In',
-                `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no`
-            );
-            
-            // Check if popup was blocked
-            if (!popup || popup.closed || typeof popup.closed === 'undefined') {
-                alert('Popup blocked! Please allow popups for this site to sign in with Google.');
-                return;
-            }
-            
-            // Poll for popup close or message
-            const checkPopup = setInterval(() => {
-                try {
-                    if (popup.closed) {
-                        clearInterval(checkPopup);
-                    }
-                } catch (e) {
-                    clearInterval(checkPopup);
-                }
-            }, 500);
+            localStorage.setItem('elxora:user', JSON.stringify(userProfile));
+            window.location.reload();
         }
         
-        // Handle OAuth callback (when redirected back)
-        function handleOAuthCallback() {
-            const hash = window.location.hash.substring(1);
-            const params = new URLSearchParams(hash);
-            const accessToken = params.get('access_token');
-            const state = params.get('state');
-            
-            if (accessToken && state === 'google_login') {
-                // Fetch user info from Google
-                fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-                    headers: { Authorization: `Bearer ${accessToken}` }
-                })
-                .then(res => res.json())
-                .then(profile => {
-                    const userProfile = {
-                        name: profile.name,
-                        email: profile.email,
-                        picture: profile.picture
-                    };
-                    localStorage.setItem('elxora:user', JSON.stringify(userProfile));
-                    
-                    // If opened in popup, close it and notify parent
-                    if (window.opener) {
-                        window.opener.postMessage({ type: 'google-login-success', user: userProfile }, '*');
-                        window.close();
-                    } else {
-                        // If in main window, clean URL and reload
-                        window.history.replaceState({}, document.title, window.location.pathname);
-                        window.location.reload();
-                    }
-                })
-                .catch(err => {
-                    console.error('Failed to fetch user info:', err);
-                    alert('Failed to complete sign-in. Please try again.');
-                    if (window.opener) {
-                        window.close();
-                    }
+        // Initialize Google Sign-In when script loads
+        window.onload = function() {
+            if (window.google) {
+                google.accounts.id.initialize({
+                    client_id: '968210645256-ql0ctmsn48dior31oresu53p21rugnna.apps.googleusercontent.com',
+                    callback: handleCredentialResponse,
+                    ux_mode: 'popup', // This makes it open in a popup!
+                    auto_select: false
                 });
             }
-        }
-        
-        // Listen for messages from popup
-        window.addEventListener('message', (event) => {
-            if (event.data.type === 'google-login-success') {
-                // User logged in successfully in popup
-                window.location.reload();
-            }
-        });
-        
-        // Check if this is an OAuth callback
-        if (window.location.hash.includes('access_token')) {
-            handleOAuthCallback();
-        }
+        };
 
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('loading').style.display = 'none';
@@ -349,7 +286,13 @@
 
             // Handle custom Google sign-in button click
             if (customSignInBtn) {
-                customSignInBtn.onclick = initiateGoogleLogin;
+                customSignInBtn.onclick = () => {
+                    if (window.google) {
+                        google.accounts.id.prompt(); // This opens the popup!
+                    } else {
+                        alert('Google Sign-In is loading, please try again in a moment.');
+                    }
+                };
             }
 
             function showApp() {
