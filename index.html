@@ -159,7 +159,7 @@
         <div class="login-card">
             <h2 class="login-title">Welcome to ElXora</h2>
             <p class="login-subtitle">Sign in with Google to save your chats and personalize</p>
-            <div id="google-login-btn" class="g-signin2 mt-6" data-onsuccess="onSignIn" data-theme="dark" data-width="320" data-height="50" data-longtitle="true"></div>
+            <div id="google-login-btn" class="g-signin2 mt-8" data-onsuccess="onSignIn" data-theme="dark" data-width="320" data-height="50" data-longtitle="true"></div>
         </div>
     </div>
 
@@ -267,7 +267,7 @@
                     picture: profile.getImageUrl()
                 };
                 localStorage.setItem('elxora:user', JSON.stringify(userProfile));
-                showApp(); // Hide modal and show app + user info
+                showApp(); // Hide modal immediately after login
             }
 
             logoutBtn.onclick = () => {
