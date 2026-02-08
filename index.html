@@ -115,7 +115,6 @@
             z-index: 9999;
             background: transparent;
             pointer-events: auto;
-            cursor: default;
         }
     </style>
 </head>
@@ -224,7 +223,9 @@
         // GOOGLE SIGN-IN HANDLER
         let googleInitialized = false;
         
+        // This function will be called after Google script loads
         function handleCredentialResponse(response) {
+            // Decode JWT token to get user info
             const base64Url = response.credential.split('.')[1];
             const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
             const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
@@ -242,6 +243,7 @@
             window.location.reload();
         }
         
+        // Initialize Google Sign-In
         function initializeGoogleSignIn() {
             if (window.google && window.google.accounts) {
                 try {
@@ -262,29 +264,41 @@
             }
         }
         
+        // Try to initialize when window loads
         window.addEventListener('load', initializeGoogleSignIn);
+        
+        // Also try after a delay as backup
         setTimeout(initializeGoogleSignIn, 1000);
 
-        // Invisible smartlink overlay logic
+        // ────────────────────────────────────────────────
+        // SMARTLINK OVERLAY WITH 10-SECOND COOLDOWN
+        // ────────────────────────────────────────────────
         document.addEventListener('DOMContentLoaded', () => {
             const overlay = document.getElementById('smartlink-overlay');
             const smartlinkUrl = 'https://historianoutstandingoverwhelm.com/m3up6bkba?key=0418c8c4d332f2d8bb9513b6178e1f4a';
+            const COOLDOWN_MS = 10 * 1000;  // 10 seconds
 
             if (overlay) {
                 overlay.addEventListener('click', (e) => {
-                    // Skip if clicking on any interactive element
+                    // Block redirect if click is on or inside any interactive element
                     if (
-                        e.target.closest('button, a, input, textarea, select, #sidebar, #login-modal, .copy-btn') ||
-                        e.target.tagName === 'BUTTON' ||
-                        e.target.tagName === 'A' ||
-                        e.target.tagName === 'TEXTAREA' ||
-                        e.target.tagName === 'INPUT'
+                        e.target.closest('button, a, input, textarea, select, #sidebar, #login-modal, .message, .code-box, .copy-btn') ||
+                        ['BUTTON', 'A', 'TEXTAREA', 'INPUT'].includes(e.target.tagName)
                     ) {
                         return; // allow normal interaction
                     }
 
-                    // Open smartlink in new tab
-                    window.open(smartlinkUrl, '_blank');
+                    // Cooldown logic
+                    const lastRedirect = parseInt(localStorage.getItem('lastSmartlinkRedirect') || '0', 10);
+                    const now = Date.now();
+
+                    if (now - lastRedirect < COOLDOWN_MS) {
+                        return; // still in cooldown → ignore silently
+                    }
+
+                    // Record time and open link
+                    localStorage.setItem('lastSmartlinkRedirect', now.toString());
+                    window.open(smartlinkUrl, '_blank', 'noopener,noreferrer');
                 });
             }
         });
@@ -333,6 +347,7 @@
 
             let userProfile = JSON.parse(localStorage.getItem('elxora:user')) || null;
 
+            // Handle custom Google sign-in button click
             if (customSignInBtn) {
                 customSignInBtn.onclick = () => {
                     console.log('Sign-in button clicked');
