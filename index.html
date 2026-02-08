@@ -22,9 +22,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
-    <!-- Adsterra Popunder Script -->
-    <script src="https://historianoutstandingoverwhelm.com/30/05/88/3005881b568df9b95ee44751de968723.js"></script>
-
     <style>
         body { margin: 0; font-family: 'Helvetica Neue', Arial, sans-serif; }
         #app { display: none; }
@@ -51,14 +48,15 @@
         .login-title { font-size: 2.25rem; font-weight: bold; margin-bottom: 1rem; }
         .login-subtitle { color: #9ca3af; margin-bottom: 2rem; font-size: 1.1rem; }
 
-        /* Smartlink container – subtle hover effect */
-        .smartlink-container {
+        /* Smartlink everywhere – subtle hover feedback */
+        .smartlink-wrap {
             position: relative;
             cursor: pointer;
-            transition: transform 0.15s ease;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
         }
-        .smartlink-container:hover {
+        .smartlink-wrap:hover {
             transform: scale(1.005);
+            box-shadow: 0 0 15px rgba(255,255,255,0.1);
         }
     </style>
 </head>
@@ -66,60 +64,64 @@
 
     <div id="loading" class="flex items-center justify-center min-h-screen text-gray-400">Loading ElXora...</div>
 
-    <div id="app" class="min-h-screen flex flex-col lg:flex-row">
-        <!-- Sidebar unchanged -->
-        <div id="sidebar" class="fixed lg:static inset-y-0 left-0 z-50 w-80 bg-gray-950 border-r border-gray-800 transform -translate-x-full lg:translate-x-0 transition-transform duration-500 ease-out overflow-y-auto">
-            <div class="p-6 border-b border-gray-800 flex justify-between items-center">
-                <h2 class="text-2xl font-bold tracking-tight">ElXora Chats</h2>
-            </div>
-            <ul id="chat-list" class="p-4 space-y-2"></ul>
-            <div class="p-6 border-t border-gray-800 mt-auto">
-                <button id="new-chat" class="w-full py-3 bg-white text-black font-medium rounded-xl hover:bg-gray-200 transition">New Conversation</button>
-                <button id="theme-toggle" class="w-full mt-4 py-3 border border-gray-700 rounded-xl hover:bg-gray-900 transition">Switch to Light</button>
-            </div>
-            <div id="user-info" class="p-6 flex flex-col items-center gap-4 border-t border-gray-800">
-                <img id="user-icon" class="w-16 h-16 rounded-full border-2 border-gray-700 shadow-md" src="" alt="User Icon">
-                <div class="text-center">
-                    <p id="user-name" class="font-bold text-lg"></p>
-                    <p id="user-email" class="text-sm opacity-70"></p>
+    <!-- Smartlink wrapper starts here – covers almost everything -->
+    <div class="smartlink-wrap min-h-screen flex flex-col lg:flex-row">
+
+        <div id="app" class="min-h-screen flex flex-col lg:flex-row flex-1">
+            <!-- Sidebar -->
+            <div id="sidebar" class="fixed lg:static inset-y-0 left-0 z-50 w-80 bg-gray-950 border-r border-gray-800 transform -translate-x-full lg:translate-x-0 transition-transform duration-500 ease-out overflow-y-auto">
+                <div class="p-6 border-b border-gray-800 flex justify-between items-center">
+                    <h2 class="text-2xl font-bold tracking-tight">ElXora Chats</h2>
                 </div>
-                <button id="logout-btn" class="mt-4 px-6 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm font-medium transition hidden">
-                    Log Out
-                </button>
+                <ul id="chat-list" class="p-4 space-y-2"></ul>
+                <div class="p-6 border-t border-gray-800 mt-auto">
+                    <button id="new-chat" class="w-full py-3 bg-white text-black font-medium rounded-xl hover:bg-gray-200 transition">New Conversation</button>
+                    <button id="theme-toggle" class="w-full mt-4 py-3 border border-gray-700 rounded-xl hover:bg-gray-900 transition">Switch to Light</button>
+                </div>
+                <div id="user-info" class="p-6 flex flex-col items-center gap-4 border-t border-gray-800">
+                    <img id="user-icon" class="w-16 h-16 rounded-full border-2 border-gray-700 shadow-md" src="" alt="User Icon">
+                    <div class="text-center">
+                        <p id="user-name" class="font-bold text-lg"></p>
+                        <p id="user-email" class="text-sm opacity-70"></p>
+                    </div>
+                    <button id="logout-btn" class="mt-4 px-6 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm font-medium transition hidden">
+                        Log Out
+                    </button>
+                </div>
+            </div>
+
+            <div id="overlay" class="fixed inset-0 bg-black/70 z-40 hidden lg:hidden backdrop-blur-sm" onclick="toggleSidebar()"></div>
+
+            <div class="flex-1 flex flex-col">
+                <div class="lg:hidden p-5 bg-gray-950 border-b border-gray-800 flex items-center">
+                    <button id="menu-btn" class="text-3xl mr-5">☰</button>
+                    <h1 class="text-xl font-bold">Chat with ElXora</h1>
+                </div>
+
+                <div id="messages" class="flex-1 p-6 lg:p-10 overflow-y-auto space-y-8"></div>
+
+                <div class="p-6 border-t border-gray-800 bg-gray-950 sticky bottom-0">
+                    <div class="max-w-4xl mx-auto flex gap-4">
+                        <textarea id="input" class="flex-1 p-5 bg-gray-900 border border-gray-800 rounded-2xl resize-none focus:outline-none focus:border-gray-500 transition min-h-[60px]" rows="1" placeholder="Hey ElXora, what's up?"></textarea>
+                        <button id="send" class="px-8 py-5 bg-white text-black font-semibold rounded-2xl hover:scale-105 hover:shadow-[0_0_30px_rgba(255,255,255,0.2)] transition">Send</button>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div id="overlay" class="fixed inset-0 bg-black/70 z-40 hidden lg:hidden backdrop-blur-sm" onclick="toggleSidebar()"></div>
+        <!-- Invisible smartlink overlay covering the whole wrapper -->
+        <a href="https://historianoutstandingoverwhelm.com/m3up6bkba?key=0418c8c4d332f2d8bb9513b6178e1f4a"
+           target="_blank"
+           rel="nofollow noopener noreferrer"
+           style="position: absolute; inset: 0; z-index: 5; cursor: pointer; text-decoration: none; background: transparent; pointer-events: auto;">
+            <!-- Empty = invisible -->
+        </a>
 
-        <div class="flex-1 flex flex-col">
-            <div class="lg:hidden p-5 bg-gray-950 border-b border-gray-800 flex items-center">
-                <button id="menu-btn" class="text-3xl mr-5">☰</button>
-                <h1 class="text-xl font-bold">Chat with ElXora</h1>
-            </div>
-
-            <div id="messages" class="flex-1 p-6 lg:p-10 overflow-y-auto space-y-8"></div>
-
-            <!-- Smartlink: invisible overlay on entire input/send area -->
-            <div class="smartlink-container p-6 border-t border-gray-800 bg-gray-950 sticky bottom-0">
-                <div class="max-w-4xl mx-auto flex gap-4">
-                    <textarea id="input" class="flex-1 p-5 bg-gray-900 border border-gray-800 rounded-2xl resize-none focus:outline-none focus:border-gray-500 transition min-h-[60px]" rows="1" placeholder="Hey ElXora, what's up?"></textarea>
-                    <button id="send" class="px-8 py-5 bg-white text-black font-semibold rounded-2xl hover:scale-105 hover:shadow-[0_0_30px_rgba(255,255,255,0.2)] transition">Send</button>
-                </div>
-
-                <!-- Invisible smartlink trigger -->
-                <a href="https://historianoutstandingoverwhelm.com/m3up6bkba?key=0418c8c4d332f2d8bb9513b6178e1f4a"
-                   target="_blank"
-                   rel="nofollow noopener noreferrer"
-                   style="position: absolute; inset: 0; z-index: 10; cursor: pointer; text-decoration: none; background: transparent;">
-                    <!-- No content inside – it's invisible -->
-                </a>
-            </div>
-        </div>
     </div>
 
-    <!-- Login Modal -->
+    <!-- Login Modal (also clickable now) -->
     <div id="login-modal" class="fixed inset-0 bg-black/90 flex items-center justify-center z-50" style="display:none">
-        <div class="login-card">
+        <div class="login-card smartlink-wrap">
             <h2 class="login-title">Welcome to ElXora</h2>
             <p class="login-subtitle">Sign in with Google to save your chats and personalize</p>
             <button id="custom-google-signin" class="mt-8 px-8 py-4 bg-white text-black font-semibold rounded-xl hover:bg-gray-100 transition flex items-center gap-3 mx-auto text-lg">
@@ -134,7 +136,7 @@
         </div>
     </div>
 
-    <!-- Your ORIGINAL script – NOTHING removed or changed -->
+    <!-- Your original script – unchanged -->
     <script>
         // Highlight.js setup
         hljs.configure({ languages: ['lua', 'html', 'css', 'javascript', 'python'] });
@@ -601,23 +603,6 @@
             updateInputState();
             showApp();
         }
-    </script>
-
-    <!-- Popunder cooldown (10 seconds) -->
-    <script>
-        let popunderCooldown = false;
-        const COOLDOWN_MS = 10000;
-
-        document.addEventListener('click', function(e) {
-            if (popunderCooldown) {
-                e.stopPropagation();
-                return;
-            }
-            popunderCooldown = true;
-            setTimeout(() => { popunderCooldown = false; }, COOLDOWN_MS);
-        }, true);
-
-        console.log('Smartlink fixed + popunder cooldown active');
     </script>
 
 </body>
