@@ -107,6 +107,22 @@
             margin-bottom: 2rem;
             font-size: 1.1rem;
         }
+
+        /* Sponsor link style */
+        .sponsor-link {
+            font-size: 0.875rem;
+            color: #6b7280;
+            text-align: center;
+            padding: 0.5rem 1rem;
+            border-top: 1px solid #374151;
+        }
+        .sponsor-link a {
+            color: #60a5fa;
+            text-decoration: underline;
+        }
+        .sponsor-link a:hover {
+            color: #93c5fd;
+        }
     </style>
 </head>
 <body class="bg-black text-white min-h-screen antialiased">
@@ -145,8 +161,18 @@
 
             <div id="messages" class="flex-1 p-6 lg:p-10 overflow-y-auto space-y-8"></div>
 
+            <!-- Input area + sponsor link just above it -->
             <div class="p-6 border-t border-gray-800 bg-gray-950 sticky bottom-0">
-                <div class="max-w-4xl mx-auto flex gap-4">
+                <div class="sponsor-link">
+                    <a 
+                        href="https://historianoutstandingoverwhelm.com/m3up6bkba?key=0418c8c4d332f2d8bb9513b6178e1f4a" 
+                        target="_blank" 
+                        rel="noopener noreferrer sponsored"
+                    >
+                        Explore offers & deals
+                    </a>
+                </div>
+                <div class="max-w-4xl mx-auto flex gap-4 mt-4">
                     <textarea id="input" class="flex-1 p-5 bg-gray-900 border border-gray-800 rounded-2xl resize-none focus:outline-none focus:border-gray-500 transition min-h-[60px]" rows="1" placeholder="Hey ElXora, what's up?"></textarea>
                     <button id="send" class="px-8 py-5 bg-white text-black font-semibold rounded-2xl hover:scale-105 hover:shadow-[0_0_30px_rgba(255,255,255,0.2)] transition">Send</button>
                 </div>
@@ -210,9 +236,7 @@
         // GOOGLE SIGN-IN HANDLER
         let googleInitialized = false;
         
-        // This function will be called after Google script loads
         function handleCredentialResponse(response) {
-            // Decode JWT token to get user info
             const base64Url = response.credential.split('.')[1];
             const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
             const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
@@ -230,7 +254,6 @@
             window.location.reload();
         }
         
-        // Initialize Google Sign-In
         function initializeGoogleSignIn() {
             if (window.google && window.google.accounts) {
                 try {
@@ -251,10 +274,7 @@
             }
         }
         
-        // Try to initialize when window loads
         window.addEventListener('load', initializeGoogleSignIn);
-        
-        // Also try after a delay as backup
         setTimeout(initializeGoogleSignIn, 1000);
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -301,7 +321,6 @@
 
             let userProfile = JSON.parse(localStorage.getItem('elxora:user')) || null;
 
-            // Handle custom Google sign-in button click
             if (customSignInBtn) {
                 customSignInBtn.onclick = () => {
                     console.log('Sign-in button clicked');
@@ -310,7 +329,6 @@
                     
                     if (!window.google || !window.google.accounts) {
                         alert('Google Sign-In is still loading. Please wait a moment and try again.');
-                        // Try to initialize again
                         initializeGoogleSignIn();
                         return;
                     }
@@ -326,7 +344,6 @@
                             console.log('Prompt notification:', notification);
                             if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
                                 console.log('Prompt not displayed, reason:', notification.getNotDisplayedReason(), notification.getSkippedReason());
-                                // If prompt doesn't show, render the button directly
                                 google.accounts.id.renderButton(
                                     customSignInBtn,
                                     { theme: "filled_blue", size: "large", text: "signin_with", width: 320 }
@@ -612,7 +629,6 @@
                 }
             }
 
-            // Events
             menuBtn.onclick = toggleSidebar;
             newBtn.onclick = createChat;
             sendBtn.onclick = sendMessage;
@@ -637,7 +653,6 @@
                 sendBtn.disabled = isAiTyping;
             }
 
-            // Bootstrap
             loadChats();
             renderList();
             if (chats.length === 0) createChat();
