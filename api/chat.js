@@ -13,7 +13,6 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         ...body,
         model: 'llama-3.1-8b-instant',  // ← updated here
-        stream: true
       })
     });
 
