@@ -1,10 +1,10 @@
 export default async function handler(req, res) {
-  // Allow CORS from anywhere (for testing)
+  // CORS - allow from anywhere for testing
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  // Handle preflight OPTIONS request
+  // Handle browser preflight request
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
@@ -15,16 +15,16 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Read the request body (messages + model from frontend)
+    // Get the request body (messages from frontend)
     const body = req.body;
 
-    // Check if API key exists
+    // Safety check: make sure we have the key
     if (!process.env.GROQ_API_KEY) {
-      console.error('Missing GROQ_API_KEY in environment variables');
-      return res.status(500).json({ error: 'Server configuration error: missing API key' });
+      console.error('CRITICAL: GROQ_API_KEY is missing in Vercel env vars');
+      return res.status(500).json({ error: 'Server error: API key not configured' });
     }
 
-    console.log('Sending request to Groq with model: llama-3.1-8b-instant');
+    console.log('Proxy: Sending request to Groq...');
 
     const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
@@ -33,32 +33,37 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'llama-3.1-8b-instant',   // fast & free model
-        messages: body.messages,          // pass messages from frontend
+        model: 'llama-3.1-8b-instant',   // fastest free model - change if you want
+        messages: body.messages,
         temperature: 0.7,
         max_tokens: 2048,
-        stream: false                     // no streaming = full reply at once
+        stream: false                     // no streaming = full reply
       })
     });
 
+    // Log status for Vercel logs
+    console.log('Groq responded with status:', groqResponse.status);
+
     if (!groqResponse.ok) {
       const errorText = await groqResponse.text();
-      console.error('Groq error:', groqResponse.status, errorText);
+      console.error('Groq failed:', groqResponse.status, errorText);
       return res.status(groqResponse.status).json({ 
-        error: `Groq API error ${groqResponse.status}: ${errorText}` 
+        error: `Groq error ${groqResponse.status}: ${errorText}` 
       });
     }
 
-    // Get the full JSON response
+    // Get full JSON response
     const data = await groqResponse.json();
 
-    // Return the assistant's reply
-    const assistantReply = data.choices?.[0]?.message?.content || '';
+    // Extract assistant reply
+    const assistantReply = data.choices?.[0]?.message?.content;
 
     if (!assistantReply) {
-      return res.status(500).json({ error: 'No reply received from Groq' });
+      console.error('No reply content from Groq');
+      return res.status(500).json({ error: 'No valid reply from AI' });
     }
 
+    // Send back to frontend
     return res.status(200).json({
       choices: [{
         message: {
@@ -69,7 +74,7 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error('Proxy crash:', error.message, error.stack);
+    console.error('Proxy crashed:', error.message, error.stack);
     return res.status(500).json({ 
       error: 'Proxy failed: ' + (error.message || 'Unknown error') 
     });
